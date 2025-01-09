@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .list-group-item {
+            background-color: #e7f3ff;
+        }
+        .footer-text {
+            text-align: center;
+            color: lightgray;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Todo List</h1>
+        <div class="input-group mb-3">
+            <input type="text" id="taskInput" class="form-control" placeholder="Add a new task">
+            <button class="btn btn-primary" id="addTaskBtn">Add Task</button>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+            <button class="btn btn-danger" id="deleteAllBtn">Delete All</button>
+            <button class="btn btn-warning" id="undoAllBtn" style="display: none;">Undo</button>
+        </div>
+        <ul class="list-group" id="taskList"></ul>
+    </div>
+
+    <p class="footer-text">Aayush Adk</p>
+
+    <script>
+        const taskList = document.getElementById('taskList');
+        const undoAllBtn = document.getElementById('undoAllBtn');
+        const deletedTasks = [];
+
+        document.getElementById('addTaskBtn').addEventListener('click', function() {
+            const taskInput = document.getElementById('taskInput');
+            const taskText = taskInput.value.trim();
+
+            if (taskText === '') {
+                alert('Please enter a task!');
+                return;
+            }
+
+            addTaskToList(taskText, false);
+            taskInput.value = '';
+            taskInput.focus();
+        });
+
+        document.getElementById('deleteAllBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete all tasks?')) {
+                const tasks = Array.from(taskList.children);
+                tasks.forEach((task, index) => {
+                    const taskText = task.querySelector('span').textContent;
+                    const completed = task.querySelector('span').classList.contains('completed');
+                    deletedTasks.push({ text: taskText, completed, index });
+                });
+                taskList.innerHTML = '';
+                updateUndoButtonVisibility();
+            }
+        });
+
+        undoAllBtn.addEventListener('click', function() {
+            const tasksToRestore = [...deletedTasks];
+            deletedTasks.length = 0; // Clear deletedTasks array
+            tasksToRestore.sort((a, b) => a.index - b.index).forEach(({ text, completed, index }) => {
+                addTaskToListAtIndex(text, completed, index);
+            });
+            updateUndoButtonVisibility();
+        });
+
+        function addTaskToList(taskText, isCompleted) {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+            const taskSpan = document.createElement('span');
+            taskSpan.textContent = taskText;
+            if (isCompleted) {
+                taskSpan.classList.add('completed');
+            }
+            listItem.appendChild(taskSpan);
+
+            const controls = document.createElement('div');
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = isCompleted ? 'btn btn-sm btn-secondary me-2' : 'btn btn-sm btn-success me-2';
+            toggleBtn.textContent = isCompleted ? 'Undo' : 'Complete';
+            toggleBtn.addEventListener('click', function() {
+                taskSpan.classList.toggle('completed');
+                if (taskSpan.classList.contains('completed')) {
+                    toggleBtn.textContent = 'Undo';
+                    toggleBtn.classList.replace('btn-success', 'btn-secondary');
+                } else {
+                    toggleBtn.textContent = 'Complete';
+                    toggleBtn.classList.replace('btn-secondary', 'btn-success');
+                }
+            });
+            controls.appendChild(toggleBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-sm btn-warning me-2';
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', function() {
+                const newTask = prompt('Edit task:', taskSpan.textContent);
+                if (newTask !== null && newTask.trim() !== '') {
+                    taskSpan.textContent = newTask.trim();
+                }
+            });
+            controls.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', function() {
+                const index = Array.from(taskList.children).indexOf(listItem);
+                deletedTasks.push({ text: taskSpan.textContent, completed: taskSpan.classList.contains('completed'), index });
+                taskList.removeChild(listItem);
+                updateUndoButtonVisibility();
+            });
+            controls.appendChild(deleteBtn);
+
+            listItem.appendChild(controls);
+            taskList.appendChild(listItem);
+        }
+
+        function addTaskToListAtIndex(taskText, isCompleted, index) {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+            const taskSpan = document.createElement('span');
+            taskSpan.textContent = taskText;
+            if (isCompleted) {
+                taskSpan.classList.add('completed');
+            }
+            listItem.appendChild(taskSpan);
+
+            const controls = document.createElement('div');
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = isCompleted ? 'btn btn-sm btn-secondary me-2' : 'btn btn-sm btn-success me-2';
+            toggleBtn.textContent = isCompleted ? 'Undo' : 'Complete';
+            toggleBtn.addEventListener('click', function() {
+                taskSpan.classList.toggle('completed');
+                if (taskSpan.classList.contains('completed')) {
+                    toggleBtn.textContent = 'Undo';
+                    toggleBtn.classList.replace('btn-success', 'btn-secondary');
+                } else {
+                    toggleBtn.textContent = 'Complete';
+                    toggleBtn.classList.replace('btn-secondary', 'btn-success');
+                }
+            });
+            controls.appendChild(toggleBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-sm btn-warning me-2';
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', function() {
+                const newTask = prompt('Edit task:', taskSpan.textContent);
+                if (newTask !== null && newTask.trim() !== '') {
+                    taskSpan.textContent = newTask.trim();
+                }
+            });
+            controls.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', function() {
+                const currentIndex = Array.from(taskList.children).indexOf(listItem);
+                deletedTasks.push({ text: taskSpan.textContent, completed: taskSpan.classList.contains('completed'), index: currentIndex });
+                taskList.removeChild(listItem);
+                updateUndoButtonVisibility();
+            });
+            controls.appendChild(deleteBtn);
+
+            listItem.appendChild(controls);
+
+            if (index >= taskList.children.length) {
+                taskList.appendChild(listItem);
+            } else {
+                taskList.insertBefore(listItem, taskList.children[index]);
+            }
+        }
+
+        function updateUndoButtonVisibility() {
+            undoAllBtn.style.display = deletedTasks.length > 0 ? 'inline-block' : 'none';
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
