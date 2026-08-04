@@ -118,6 +118,31 @@
             saveTasksToLocalStorage();
         });
 
+        // Mobile touch support: handle touchmove reordering
+        // We add listeners to the document to ensure touchmove works when finger moves fast
+        document.addEventListener('touchmove', function(e) {
+            if (!dragged) return;
+            // prevent page scroll while dragging
+            e.preventDefault();
+            const touch = e.touches[0];
+            const afterElement = getDragAfterElement(taskList, touch.clientY);
+            if (afterElement == null) {
+                taskList.appendChild(dragged);
+            } else {
+                taskList.insertBefore(dragged, afterElement);
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', function(e) {
+            if (!dragged) return;
+            // finish drag
+            dragged.classList.remove('dragging');
+            dragged = null;
+            // re-enable scrolling
+            document.body.style.overflow = '';
+            saveTasksToLocalStorage();
+        });
+
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.list-group-item:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
@@ -201,6 +226,19 @@
                 saveTasksToLocalStorage();
             });
 
+            // Touch handlers for mobile
+            listItem.addEventListener('touchstart', function(e) {
+                // start dragging on touch
+                dragged = listItem;
+                listItem.classList.add('dragging');
+                // prevent page from scrolling while dragging
+                document.body.style.overflow = 'hidden';
+                // prevent simulated mouse events
+                e.preventDefault();
+            }, { passive: false });
+
+            // Note: touchmove and touchend are handled at document level to ensure smooth tracking
+
             taskList.appendChild(listItem);
         }
 
@@ -273,6 +311,14 @@
                 listItem.classList.remove('dragging');
                 saveTasksToLocalStorage();
             });
+
+            // Touch handlers for mobile
+            listItem.addEventListener('touchstart', function(e) {
+                dragged = listItem;
+                listItem.classList.add('dragging');
+                document.body.style.overflow = 'hidden';
+                e.preventDefault();
+            }, { passive: false });
 
             if (index >= taskList.children.length) {
                 taskList.appendChild(listItem);
