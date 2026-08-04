@@ -228,12 +228,17 @@
 
             // Touch handlers for mobile
             listItem.addEventListener('touchstart', function(e) {
+                const touchTarget = e.target;
+                // If the user touched a control (button/input), do not start dragging so the control can receive the touch
+                if (touchTarget.closest && (touchTarget.closest('button') || touchTarget.closest('input'))) {
+                    return;
+                }
                 // start dragging on touch
                 dragged = listItem;
                 listItem.classList.add('dragging');
                 // prevent page from scrolling while dragging
                 document.body.style.overflow = 'hidden';
-                // prevent simulated mouse events
+                // prevent simulated mouse events and scrolling
                 e.preventDefault();
             }, { passive: false });
 
@@ -314,6 +319,10 @@
 
             // Touch handlers for mobile
             listItem.addEventListener('touchstart', function(e) {
+                const touchTarget = e.target;
+                if (touchTarget.closest && (touchTarget.closest('button') || touchTarget.closest('input'))) {
+                    return;
+                }
                 dragged = listItem;
                 listItem.classList.add('dragging');
                 document.body.style.overflow = 'hidden';
